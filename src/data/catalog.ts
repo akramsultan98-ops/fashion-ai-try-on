@@ -32,6 +32,8 @@ export interface Product {
   care: string;
   description: string;
   image: string;
+  /** Photography sits on its own plate; illustrations sit on the dark card. */
+  media: 'photo' | 'illustration';
   colors: ProductColor[];
   sizes: string[];
 }

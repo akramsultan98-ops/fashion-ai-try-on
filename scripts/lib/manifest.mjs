@@ -47,6 +47,45 @@ const palettes = {
 };
 
 export const PRODUCTS = [
+  // --- Photographed products -------------------------------------------------
+  // These two carry real product photography from public/catalog/ rather than
+  // generated artwork, so `shape` and `palette` are omitted. See docs/CATALOG.md.
+  {
+    id: 'navy-womens-tee',
+    name: "Navy Women's T-Shirt",
+    category: 'tshirts',
+    image: '/catalog/navy-womens-tee.webp',
+    price: 42,
+    rating: 4.6,
+    reviews: 214,
+    layer: 'base',
+    badge: 'new',
+    fabric: 'Combed ring-spun cotton',
+    care: 'Machine wash cold, tumble dry low',
+    description:
+      'A fitted crew-neck in deep navy, cut for a shorter body and a set-in sleeve. Holds its shape through the shoulder.',
+    colors: [{ id: 'navy', label: 'Navy', hex: '#2f3d5c' }],
+    sizes: ['XS', 'S', 'M', 'L', 'XL'],
+  },
+  {
+    id: 'white-basic-tee',
+    name: 'White Basic T-Shirt',
+    category: 'tshirts',
+    image: '/catalog/white-basic-tee.jpg',
+    price: 28,
+    rating: 4.4,
+    reviews: 389,
+    layer: 'base',
+    badge: 'new',
+    fabric: 'Heavyweight cotton jersey',
+    care: 'Machine wash warm, tumble dry low',
+    description:
+      'The plain white crew, cut straight through the body with a ribbed collar and taped shoulders.',
+    colors: [{ id: 'white', label: 'White', hex: '#f4f4f2' }],
+    sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+  },
+
+  // --- Generated artwork -----------------------------------------------------
   {
     id: 'camel-wool-trench-coat',
     name: 'Camel Wool Trench Coat',

@@ -41,6 +41,66 @@
   "defaultModel": "/demo/models/studio-figure.svg",
   "products": [
     {
+      "id": "navy-womens-tee",
+      "name": "Navy Women's T-Shirt",
+      "category": "tshirts",
+      "price": 42,
+      "rating": 4.6,
+      "reviews": 214,
+      "layer": "base",
+      "badge": "new",
+      "fabric": "Combed ring-spun cotton",
+      "care": "Machine wash cold, tumble dry low",
+      "description": "A fitted crew-neck in deep navy, cut for a shorter body and a set-in sleeve. Holds its shape through the shoulder.",
+      "colors": [
+        {
+          "id": "navy",
+          "label": "Navy",
+          "hex": "#2f3d5c"
+        }
+      ],
+      "sizes": [
+        "XS",
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
+      "image": "/catalog/navy-womens-tee.webp",
+      "media": "photo",
+      "layerRank": 10
+    },
+    {
+      "id": "white-basic-tee",
+      "name": "White Basic T-Shirt",
+      "category": "tshirts",
+      "price": 28,
+      "rating": 4.4,
+      "reviews": 389,
+      "layer": "base",
+      "badge": "new",
+      "fabric": "Heavyweight cotton jersey",
+      "care": "Machine wash warm, tumble dry low",
+      "description": "The plain white crew, cut straight through the body with a ribbed collar and taped shoulders.",
+      "colors": [
+        {
+          "id": "white",
+          "label": "White",
+          "hex": "#f4f4f2"
+        }
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "image": "/catalog/white-basic-tee.jpg",
+      "media": "photo",
+      "layerRank": 10
+    },
+    {
       "id": "camel-wool-trench-coat",
       "name": "Camel Wool Trench Coat",
       "category": "outerwear",
@@ -72,6 +132,7 @@
         "XL"
       ],
       "image": "/demo/garments/camel-wool-trench-coat.svg",
+      "media": "illustration",
       "layerRank": 30
     },
     {
@@ -111,6 +172,7 @@
         "XL"
       ],
       "image": "/demo/garments/army-green-puffer-jacket.svg",
+      "media": "illustration",
       "layerRank": 30
     },
     {
@@ -145,6 +207,7 @@
         "XL"
       ],
       "image": "/demo/garments/indigo-denim-trucker-jacket.svg",
+      "media": "illustration",
       "layerRank": 30
     },
     {
@@ -177,6 +240,7 @@
         "XL"
       ],
       "image": "/demo/garments/olive-bomber-jacket.svg",
+      "media": "illustration",
       "layerRank": 30
     },
     {
@@ -211,6 +275,7 @@
         "L"
       ],
       "image": "/demo/garments/dark-brown-leather-biker-jacket.svg",
+      "media": "illustration",
       "layerRank": 30
     },
     {
@@ -245,6 +310,7 @@
         "XXL"
       ],
       "image": "/demo/garments/charcoal-heavy-cotton-tee.svg",
+      "media": "illustration",
       "layerRank": 10
     },
     {
@@ -278,6 +344,7 @@
         "XL"
       ],
       "image": "/demo/garments/off-white-boxy-tee.svg",
+      "media": "illustration",
       "layerRank": 10
     },
     {
@@ -317,6 +384,7 @@
         "XL"
       ],
       "image": "/demo/garments/oat-merino-crewneck.svg",
+      "media": "illustration",
       "layerRank": 20
     },
     {
@@ -349,6 +417,7 @@
         "XL"
       ],
       "image": "/demo/garments/slate-hooded-sweatshirt.svg",
+      "media": "illustration",
       "layerRank": 20
     },
     {
@@ -382,6 +451,7 @@
         "XL"
       ],
       "image": "/demo/garments/stone-oxford-shirt.svg",
+      "media": "illustration",
       "layerRank": 20
     },
     {
@@ -415,6 +485,7 @@
         "36"
       ],
       "image": "/demo/garments/black-tailored-trousers.svg",
+      "media": "illustration",
       "layerRank": 5
     },
     {
@@ -450,6 +521,7 @@
         "36"
       ],
       "image": "/demo/garments/ecru-wide-leg-trousers.svg",
+      "media": "illustration",
       "layerRank": 5
     },
     {
@@ -486,6 +558,7 @@
         "45"
       ],
       "image": "/demo/garments/optic-leather-sneakers.svg",
+      "media": "illustration",
       "layerRank": 1
     },
     {
@@ -516,6 +589,7 @@
         "L/XL"
       ],
       "image": "/demo/garments/noir-wool-flat-cap.svg",
+      "media": "illustration",
       "layerRank": 40
     }
   ]

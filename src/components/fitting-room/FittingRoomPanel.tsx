@@ -5,8 +5,10 @@ import { useEffect, useState } from 'react';
 import { LookViewer } from '@/components/fitting-room/LookViewer';
 import { PhotoUploader } from '@/components/fitting-room/PhotoUploader';
 import { Icon } from '@/components/ui/Icon';
-import { DEFAULT_MODEL_IMAGE } from '@/data/catalog';
+import { ProductImage } from '@/components/ui/ProductImage';
+import { DEFAULT_MODEL_IMAGE, type Product } from '@/data/catalog';
 import { cn } from '@/lib/cn';
+import type { TryOnProviderInfo } from '@/lib/try-on/types';
 import { useFittingRoom } from '@/state/fitting-room-context';
 import { useStore } from '@/state/store-context';
 
@@ -115,6 +117,8 @@ export function FittingRoomPanel() {
           </header>
 
           <div className="scrollarea flex-1 overflow-y-auto px-5 pb-4">
+            {provider?.setup ? <SetupNotice setup={provider.setup} /> : null}
+
             <Stage
               stage={stage}
               error={error}
@@ -125,6 +129,12 @@ export function FittingRoomPanel() {
               simulated={activeLook?.simulated ?? false}
               subjectSrc={subject?.kind === 'upload' ? subject.dataUrl : DEFAULT_MODEL_IMAGE}
               hasSubject={Boolean(subject)}
+              garments={picks.map((pick) => ({
+                id: pick.product.id,
+                name: pick.product.name,
+                image: pick.product.image,
+                media: pick.product.media,
+              }))}
               onExpand={() => setExpanded(true)}
               onCancel={() => void cancel()}
               onRetry={() => {
@@ -144,13 +154,11 @@ export function FittingRoomPanel() {
                 <ul className="mt-2.5 flex gap-2 overflow-x-auto pb-1">
                   {picks.map((pick) => (
                     <li key={pick.product.id} className="relative shrink-0">
-                      <span className="grid size-14 place-items-center rounded-lg border border-ink-700 bg-ink-800">
-                        {/* eslint-disable-next-line @next/next/no-img-element -- catalogue artwork is SVG */}
-                        <img
-                          src={pick.product.image}
-                          alt={pick.product.name}
+                      <span className="grid size-14 place-items-center rounded-lg border border-ink-700 bg-ink-800 p-1.5">
+                        <ProductImage
+                          product={pick.product}
                           title={`${pick.product.name} · ${pick.size}`}
-                          className="size-11 object-contain"
+                          className="size-full"
                         />
                       </span>
                       <button
@@ -334,6 +342,8 @@ interface StageProps {
   simulated: boolean;
   subjectSrc: string;
   hasSubject: boolean;
+  /** Shown alongside the photo while the shopper is deciding. */
+  garments: Array<Pick<Product, 'id' | 'name' | 'image' | 'media'>>;
   onDismissError(): void;
   onExpand(): void;
   onCancel(): void;
@@ -350,6 +360,7 @@ function Stage({
   simulated,
   subjectSrc,
   hasSubject,
+  garments,
   onDismissError,
   onExpand,
   onRetry,
@@ -414,7 +425,7 @@ function Stage({
     return (
       <div className={cn(STAGE_FRAME, "group relative overflow-hidden rounded-xl bg-ink-800")}>
         {/* eslint-disable-next-line @next/next/no-img-element -- session-scoped API image */}
-        <img src={lookSrc} alt="Your virtual try-on" className="size-full object-cover" />
+        <img src={lookSrc} alt="Your virtual try-on" className="size-full object-contain" />
         <button
           type="button"
           onClick={onExpand}
@@ -432,8 +443,38 @@ function Stage({
     );
   }
 
+  // Ready: the photo and the chosen piece both stay on screen, so the shopper
+  // can see exactly what is about to be sent before they press Generate.
+  if (stage === 'ready' && hasSubject) {
+    return (
+      <div className={cn(STAGE_FRAME, 'relative overflow-hidden rounded-xl bg-ink-800')}>
+        {/* eslint-disable-next-line @next/next/no-img-element -- in-memory data URL */}
+        <img src={subjectSrc} alt="Your photo" className="size-full object-cover" />
+
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink-950/90 via-ink-950/70 to-transparent p-3 pt-8">
+          <p className="text-[10px] uppercase tracking-[0.12em] text-bone-400">Ready to try on</p>
+          <ul className="mt-2 flex gap-2">
+            {garments.map((garment) => (
+              <li
+                key={garment.id}
+                className="grid size-12 place-items-center rounded-lg border border-ink-600 bg-ink-900/90 p-1"
+              >
+                <ProductImage product={garment} title={garment.name} className="size-full" />
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className={cn(STAGE_FRAME, "flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-ink-600 bg-ink-800/40 px-6 text-center")}>
+    <div
+      className={cn(
+        STAGE_FRAME,
+        'flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-ink-600 bg-ink-800/40 px-6 text-center',
+      )}
+    >
       <Icon name="hanger" size={22} className="text-bone-600" />
       <p className="text-[12.5px] text-bone-400">
         {stage === 'idle'
@@ -441,6 +482,65 @@ function Stage({
           : 'Add a photo and we will dress you in it.'}
       </p>
     </div>
+  );
+}
+
+/**
+ * Shown whenever no real model will run — nothing connected, or the named
+ * provider is missing credentials. It names the provider and the exact
+ * variables, because "it didn't work" is not a useful thing to tell an operator
+ * setting this up for a client.
+ */
+function SetupNotice({ setup }: { setup: NonNullable<TryOnProviderInfo['setup']> }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <section
+      role="status"
+      className="mb-4 rounded-xl border border-accent-700/50 bg-accent-700/10 p-3.5"
+    >
+      <div className="flex items-start gap-2.5">
+        <Icon name="alert" size={15} className="mt-0.5 shrink-0 text-accent-400" />
+        <div className="min-w-0">
+          <h3 className="text-[12.5px] font-medium text-accent-300">{setup.headline}</h3>
+          <p className="mt-1 text-[11.5px] leading-relaxed text-bone-300">{setup.detail}</p>
+
+          <button
+            type="button"
+            onClick={() => setOpen((current) => !current)}
+            aria-expanded={open}
+            className="mt-2 inline-flex items-center gap-1.5 text-[11.5px] text-accent-400 transition hover:text-accent-300"
+          >
+            {open ? 'Hide setup' : 'How to connect a provider'}
+            <Icon name="chevron-down" size={12} className={open ? 'rotate-180' : undefined} />
+          </button>
+
+          {open ? (
+            <ul className="mt-3 space-y-3 border-t border-accent-700/30 pt-3">
+              {setup.options.map((option) => (
+                <li key={option.id}>
+                  <p className="text-[11.5px] font-medium text-bone-100">{option.label}</p>
+                  <p className="mt-1 text-[11px] text-bone-500">Key from {option.credentialSource}</p>
+                  <ul className="mt-1.5 space-y-1">
+                    {option.env.map((variable) => (
+                      <li
+                        key={variable}
+                        className="rounded bg-ink-900/70 px-2 py-1 font-mono text-[10.5px] text-bone-300"
+                      >
+                        {variable}
+                      </li>
+                    ))}
+                  </ul>
+                  {option.note ? (
+                    <p className="mt-1.5 text-[11px] leading-relaxed text-bone-500">{option.note}</p>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+      </div>
+    </section>
   );
 }
 

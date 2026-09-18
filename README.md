@@ -12,10 +12,17 @@ npm install
 npm run dev        # http://localhost:3000
 ```
 
-Out of the box it runs on the local preview provider, which composites product
-artwork over the photo and never claims to be AI. For real generation, copy
-`.env.example` to `.env.local`, add a `GEMINI_API_KEY` and set
-`TRYON_PROVIDER=gemini`.
+Out of the box **no AI provider is connected**. The fitting room says so in a
+notice naming exactly what to set, and the local preview provider composites the
+product artwork rather than generating anything — every result it returns is
+labelled `DEMO PREVIEW — NOT AN AI TRY-ON`, in the UI and burnt into the image.
+
+For real generation, copy `.env.example` to `.env.local` and set one of:
+
+| Provider | Variables | Credential from |
+| --- | --- | --- |
+| Google Gemini | `TRYON_PROVIDER=gemini`, `GEMINI_API_KEY` | aistudio.google.com/apikey |
+| Replicate | `TRYON_PROVIDER=replicate`, `REPLICATE_API_TOKEN`, `REPLICATE_TRYON_MODEL` | replicate.com/account/api-tokens |
 
 ## Stack
 

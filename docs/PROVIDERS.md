@@ -73,10 +73,21 @@ The fallback when nothing is configured. It performs no generation — it places
 the flat product artwork over the photo at anatomically-plausible anchor points
 so the flow can be shown end to end, offline, with no credentials.
 
+How a garment is shown depends on whether it can honestly be worn:
+
+- **Cut-out artwork** (SVG, or PNG with an alpha channel) is laid over the body
+  at the anchor points above.
+- **Opaque product photography** (JPEG, WebP, flattened PNG) is not. Pasting a
+  studio-white rectangle onto a torso produces a visible box and implies a drape
+  that was never computed, so those garments are rendered as labelled reference
+  cards beside the photo, captioned "shown beside your photo, not worn".
+
 Every result it returns is marked `simulated: true`, which the panel and the
 result viewer both surface, and the image itself carries a burnt-in
-`SIMULATED PREVIEW` badge so a downloaded or shared file stays honest about
-what it is.
+`DEMO PREVIEW — NOT AN AI TRY-ON` banner so a downloaded or shared file stays
+honest about what it is. The fitting room also shows a persistent notice naming
+the provider and environment variables still needed — see `describeProvider()`
+in `registry.ts`, which attaches that guidance whenever no real model will run.
 
 ## Adding one
 

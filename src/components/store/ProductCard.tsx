@@ -3,6 +3,7 @@
 import { memo } from 'react';
 
 import { Icon } from '@/components/ui/Icon';
+import { ProductImage } from '@/components/ui/ProductImage';
 import type { Product } from '@/data/catalog';
 import { cn } from '@/lib/cn';
 import { formatPrice } from '@/lib/format';
@@ -45,14 +46,11 @@ export const ProductCard = memo(function ProductCard({
           className="block w-full cursor-zoom-in"
           aria-label={`Quick view: ${product.name}`}
         >
-          <span className="relative block aspect-[4/5] overflow-hidden">
-            {/* eslint-disable-next-line @next/next/no-img-element -- catalogue artwork is SVG; the optimiser cannot process it */}
-            <img
-              src={product.image}
-              alt={product.name}
+          <span className="relative block aspect-[4/5] p-6 sm:p-8">
+            <ProductImage
+              product={product}
               loading="lazy"
-              decoding="async"
-              className="size-full object-contain p-6 transition-transform duration-[600ms] ease-[var(--ease-out-soft)] group-hover:scale-[1.045] sm:p-8"
+              className="size-full transition-transform duration-[600ms] ease-[var(--ease-out-soft)] group-hover:scale-[1.045]"
             />
           </span>
         </button>

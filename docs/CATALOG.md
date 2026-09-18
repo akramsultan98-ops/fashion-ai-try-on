@@ -23,6 +23,33 @@ src/data/catalog.generated.json        the catalogue the app consumes
 The manifest is the single source of truth; the generator derives both the
 artwork and the data from it, so they cannot drift apart.
 
+## Photographed products
+
+`public/catalog/` holds real product photography and is never touched by the
+generator. A product uses it by giving `image` instead of `shape`/`palette`:
+
+```js
+{
+  id: 'white-basic-tee',
+  name: 'White Basic T-Shirt',
+  category: 'tshirts',
+  image: '/catalog/white-basic-tee.jpg',   // must exist under public/
+  layer: 'base',
+  // …the usual commerce fields
+}
+```
+
+`npm run assets` verifies the file exists, skips drawing, and records
+`media: 'photo'` in the catalogue. That flag drives presentation: photography
+gets a rounded light plate (`ProductImage`), because an opaque studio-white
+rectangle reads as broken against the dark card, while cut-out artwork sits
+directly on the surface.
+
+It also changes how the local preview provider behaves — see
+[`PROVIDERS.md`](PROVIDERS.md): a cut-out can be laid over the body, an opaque
+photo cannot, so photographed garments are shown *beside* the shopper rather
+than pasted onto them.
+
 ## Replacing it with real photography
 
 Two independent changes.

@@ -13,6 +13,7 @@
  * ordinary static files and a brand can drop real photography over them.
  */
 
+import { existsSync } from 'node:fs';
 import { mkdir, writeFile, rm } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -27,6 +28,8 @@ const modelDir = join(root, 'public', 'demo', 'models');
 const dataDir = join(root, 'src', 'data');
 
 async function main() {
+  // Only the generated tree is cleared. public/catalog/ holds real
+  // photography that this script must never touch.
   await rm(join(root, 'public', 'demo'), { recursive: true, force: true });
   await mkdir(garmentDir, { recursive: true });
   await mkdir(modelDir, { recursive: true });
@@ -35,17 +38,33 @@ async function main() {
   const catalog = [];
 
   for (const product of PRODUCTS) {
-    const draw = GARMENTS[product.shape];
-    if (!draw) throw new Error(`No drawing for shape "${product.shape}" (${product.id})`);
+    const { shape, palette, image, ...rest } = product;
 
-    const svg = draw(paletteFor(product.palette));
-    const file = `${product.id}.svg`;
-    await writeFile(join(garmentDir, file), svg, 'utf8');
+    // A product either carries real photography (`image`, a path under
+    // public/) or is drawn from a parametric shape. Photographed products are
+    // left alone — the generator never overwrites a file it did not create.
+    let resolved = image;
 
-    const { shape: _shape, palette: _palette, ...rest } = product;
+    if (!resolved) {
+      const draw = GARMENTS[shape];
+      if (!draw) throw new Error(`No drawing for shape "${shape}" (${product.id})`);
+
+      const file = `${product.id}.svg`;
+      await writeFile(join(garmentDir, file), draw(paletteFor(palette)), 'utf8');
+      resolved = `/demo/garments/${file}`;
+    } else {
+      const onDisk = join(root, 'public', resolved.replace(/^\//, ''));
+      if (!existsSync(onDisk)) {
+        throw new Error(`Missing product image for ${product.id}: public${resolved}`);
+      }
+    }
+
     catalog.push({
       ...rest,
-      image: `/demo/garments/${file}`,
+      image: resolved,
+      // Photography and generated artwork need different presentation: a cut-out
+      // illustration sits directly on the dark card, a photo needs its own plate.
+      media: image ? 'photo' : 'illustration',
       layerRank: LAYERS[product.layer],
     });
   }
@@ -67,7 +86,11 @@ async function main() {
     'utf8',
   );
 
-  console.log(`Wrote ${catalog.length} garments, 1 model figure, and catalog.generated.json`);
+  const drawn = catalog.filter((item) => item.image.startsWith('/demo/')).length;
+  console.log(
+    `Wrote ${drawn} drawn garments, referenced ${catalog.length - drawn} photographed, ` +
+      '1 model figure, and catalog.generated.json',
+  );
 }
 
 main().catch((error) => {

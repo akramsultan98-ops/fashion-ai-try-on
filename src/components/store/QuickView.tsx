@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 import { Icon } from '@/components/ui/Icon';
 import { Modal } from '@/components/ui/Modal';
+import { ProductImage } from '@/components/ui/ProductImage';
 import { categoryLabel, type Product } from '@/data/catalog';
 import { cn } from '@/lib/cn';
 import { formatPrice } from '@/lib/format';
@@ -42,11 +43,10 @@ function QuickViewBody({
     <Modal open onClose={onClose} labelledBy="quick-view-title" size="wide">
       <div className="grid gap-0 md:grid-cols-[1.05fr_1fr]">
         <div className="relative flex items-center justify-center border-b border-ink-700/60 bg-ink-800/60 p-8 md:border-b-0 md:border-r">
-          {/* eslint-disable-next-line @next/next/no-img-element -- catalogue artwork is SVG */}
-          <img
-            src={product.image}
-            alt={product.name}
-            className="max-h-[42vh] w-auto object-contain md:max-h-[58vh]"
+          <ProductImage
+            product={product}
+            className="h-[42vh] w-full md:h-[58vh]"
+            imageClassName="object-contain"
           />
         </div>
 

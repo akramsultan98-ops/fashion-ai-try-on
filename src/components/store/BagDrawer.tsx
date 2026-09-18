@@ -1,6 +1,7 @@
 'use client';
 
 import { Icon } from '@/components/ui/Icon';
+import { ProductImage } from '@/components/ui/ProductImage';
 import { productById } from '@/data/catalog';
 import { formatPrice } from '@/lib/format';
 import { useStore } from '@/state/store-context';
@@ -49,9 +50,8 @@ export function BagDrawer() {
               const color = product.colors.find((entry) => entry.id === line.colorId);
               return (
                 <li key={`${line.productId}-${line.colorId}-${line.size}`} className="flex gap-4 py-4">
-                  <span className="grid size-20 shrink-0 place-items-center rounded-lg border border-ink-700 bg-ink-800">
-                    {/* eslint-disable-next-line @next/next/no-img-element -- catalogue artwork is SVG */}
-                    <img src={product.image} alt="" className="size-16 object-contain" />
+                  <span className="grid size-20 shrink-0 place-items-center rounded-lg border border-ink-700 bg-ink-800 p-2">
+                    <ProductImage product={product} alt="" className="size-full" />
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[13px] text-bone-100">{product.name}</p>

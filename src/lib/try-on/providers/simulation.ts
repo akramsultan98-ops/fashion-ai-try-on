@@ -106,6 +106,30 @@ export class SimulationTryOnProvider implements VirtualTryOnProvider {
   }
 }
 
+/**
+ * Decides how a garment can honestly be shown over a photo.
+ *
+ * Cut-out artwork (vector, or PNG with an alpha channel) can be laid over the
+ * body and still read as a garment. An opaque product shot cannot — pasting a
+ * white-background JPEG onto someone's torso produces a rectangle, which both
+ * looks broken and implies a drape that was never computed. Those are listed
+ * beside the photo as references instead.
+ */
+function presentation(asset: ProviderAsset): 'overlay' | 'reference' {
+  if (asset.kind !== 'inline') return 'reference';
+  const { mimeType, bytes } = asset.image;
+
+  if (mimeType === 'image/svg+xml') return 'overlay';
+
+  // PNG colour types 4 (grey+alpha) and 6 (RGB+alpha) carry transparency;
+  // IHDR puts the colour type at byte 25.
+  if (mimeType === 'image/png' && bytes.length > 26) {
+    return bytes[25] === 4 || bytes[25] === 6 ? 'overlay' : 'reference';
+  }
+
+  return 'reference';
+}
+
 function composite(request: PreparedTryOnRequest): string {
   const subject = request.subject;
   if (subject.kind !== 'inline') {
@@ -118,33 +142,85 @@ function composite(request: PreparedTryOnRequest): string {
     (a, b) => LAYER_ORDER.indexOf(a.garment.layer) - LAYER_ORDER.indexOf(b.garment.layer),
   );
 
-  const layers = ordered
-    .map((entry, index) => {
-      const anchor = ANCHORS[entry.garment.layer] ?? ANCHORS.outer;
-      const w = width * anchor.width;
-      const h = w * 1.25;
-      const x = width * anchor.cx - w / 2;
-      const y = height * anchor.cy - h / 2;
-      return `<g opacity="${anchor.opacity}" transform="translate(${round(x)} ${round(y)})">
+  const overlays: string[] = [];
+  const references: Array<{ asset: ProviderAsset; name: string; index: number }> = [];
+
+  ordered.forEach((entry, index) => {
+    if (presentation(entry.asset) === 'reference') {
+      references.push({ asset: entry.asset, name: entry.garment.name, index });
+      return;
+    }
+    const anchor = ANCHORS[entry.garment.layer] ?? ANCHORS.outer;
+    const w = width * anchor.width;
+    const h = w * 1.25;
+    const x = width * anchor.cx - w / 2;
+    const y = height * anchor.cy - h / 2;
+    overlays.push(
+      `<g opacity="${anchor.opacity}" transform="translate(${round(x)} ${round(y)})">
         ${renderAsset(entry.asset, w, h, `p${index}`)}
+      </g>`,
+    );
+  });
+
+  const badgeHeight = Math.max(34, height * 0.045);
+  const strip = references.length ? referenceStrip(references, width, height, badgeHeight) : '';
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
+  ${renderAsset(subject, width, height, 'sub', 'slice')}
+  ${overlays.join('\n')}
+  ${strip}
+  <g>
+    <rect x="0" y="0" width="${width}" height="${round(badgeHeight)}" fill="#0b0b0d" fill-opacity="0.86"/>
+    <text x="${round(width / 2)}" y="${round(badgeHeight * 0.66)}" text-anchor="middle"
+      font-family="ui-sans-serif, system-ui, sans-serif" font-size="${round(badgeHeight * 0.38)}"
+      letter-spacing="${round(badgeHeight * 0.05)}" fill="#c7a57b">DEMO PREVIEW — NOT AN AI TRY-ON</text>
+  </g>
+</svg>`;
+}
+
+/**
+ * Lays opaque product shots along the bottom of the photo as labelled cards.
+ * The garment is shown next to the shopper, never worn by them.
+ */
+function referenceStrip(
+  entries: Array<{ asset: ProviderAsset; name: string; index: number }>,
+  width: number,
+  height: number,
+  badgeHeight: number,
+): string {
+  const pad = width * 0.025;
+  const card = Math.min(width * 0.26, (width - pad * (entries.length + 1)) / entries.length);
+  const stripHeight = card + pad * 2 + badgeHeight * 0.9;
+  const top = height - stripHeight;
+
+  const cards = entries
+    .map((entry, position) => {
+      const x = pad + position * (card + pad);
+      return `<g transform="translate(${round(x)} ${round(pad)})">
+        <rect width="${round(card)}" height="${round(card)}" rx="${round(card * 0.08)}" fill="#f6f3ee"/>
+        <g transform="translate(${round(card * 0.06)} ${round(card * 0.06)})">
+          ${renderAsset(entry.asset, card * 0.88, card * 0.88, `r${entry.index}`)}
+        </g>
       </g>`;
     })
     .join('\n');
 
+  const caption =
+    entries.length === 1 ? `Selected: ${entries[0].name}` : `${entries.length} pieces selected`;
 
-  const badgeWidth = Math.max(240, width * 0.34);
-  const badgeHeight = badgeWidth * 0.17;
+  return `<g transform="translate(0 ${round(top)})">
+    <rect width="${width}" height="${round(stripHeight)}" fill="#0b0b0d" fill-opacity="0.9"/>
+    ${cards}
+    <text x="${round(pad)}" y="${round(stripHeight - pad * 0.5)}"
+      font-family="ui-sans-serif, system-ui, sans-serif" font-size="${round(badgeHeight * 0.34)}"
+      fill="#b9b4ab">${escapeText(caption)} · shown beside your photo, not worn</text>
+  </g>`;
+}
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
-  ${renderAsset(subject, width, height, 'sub', 'slice')}
-  ${layers}
-  <g transform="translate(${round(width - badgeWidth - width * 0.03)} ${round(height - badgeHeight - width * 0.03)})">
-    <rect width="${round(badgeWidth)}" height="${round(badgeHeight)}" rx="${round(badgeHeight / 2)}" fill="#0b0b0d" fill-opacity="0.82"/>
-    <text x="${round(badgeWidth / 2)}" y="${round(badgeHeight * 0.64)}" text-anchor="middle"
-      font-family="ui-sans-serif, system-ui, sans-serif" font-size="${round(badgeHeight * 0.4)}"
-      letter-spacing="${round(badgeHeight * 0.06)}" fill="#c7a57b">SIMULATED PREVIEW</text>
-  </g>
-</svg>`;
+function escapeText(value: string): string {
+  return value.replace(/[<>&]/g, (character) =>
+    character === '<' ? '&lt;' : character === '>' ? '&gt;' : '&amp;',
+  );
 }
 
 /**
@@ -230,6 +306,25 @@ function measure(image: InlineImage): { width: number; height: number } {
   if (bytes.length > 24 && bytes[0] === 0x89 && bytes[1] === 0x50) {
     const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
     return { width: view.getUint32(16), height: view.getUint32(20) };
+  }
+
+  // WebP: the size lives in the first chunk, and its layout differs per variant.
+  if (bytes.length > 30 && bytes[0] === 0x52 && bytes[8] === 0x57 && bytes[9] === 0x45) {
+    const chunk = String.fromCharCode(bytes[12], bytes[13], bytes[14], bytes[15]);
+    const u16 = (at: number) => bytes[at] | (bytes[at + 1] << 8);
+    if (chunk === 'VP8X') {
+      return {
+        width: (bytes[24] | (bytes[25] << 8) | (bytes[26] << 16)) + 1,
+        height: (bytes[27] | (bytes[28] << 8) | (bytes[29] << 16)) + 1,
+      };
+    }
+    if (chunk === 'VP8 ') {
+      return { width: u16(26) & 0x3fff, height: u16(28) & 0x3fff };
+    }
+    if (chunk === 'VP8L') {
+      const bits = bytes[21] | (bytes[22] << 8) | (bytes[23] << 16) | (bytes[24] << 24);
+      return { width: (bits & 0x3fff) + 1, height: ((bits >> 14) & 0x3fff) + 1 };
+    }
   }
 
   // JPEG: walk the segment markers to the first SOF frame header.
